@@ -1,0 +1,28 @@
+{
+    "mappings": {
+        "properties": {
+            "tags": {"type": "text"},
+            "owner": {
+                "properties": {
+                    "reputation": {"type": "long"},
+                    "user_id": {"type": "long"},
+                    "user_type": {"type": "text"},
+                    "registered": {"type": "text"},
+                    "profile_image": {"type": "text"},
+                    "display_name": {"type": "text"},
+                    "link": {"type": "text"}
+                }
+            },
+            "is_answered": {"type": "boolean"},
+            "view_count": {"type": "long"},
+            "answer_count": {"type": "long"},
+            "score": {"type": "long"},
+            "last_activity_date": {"type": "date"},
+            "creation_date": {"type": "date"},
+            "question_id": {"type": "long"},
+            "content_license": {"type": "text"},
+            "link": {"type": "text"},
+            "title": {"type": "text"}
+        }
+    }
+}

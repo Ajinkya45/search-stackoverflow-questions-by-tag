@@ -1,0 +1,51 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: 'Read aws analytics service questions from stackoverflow and push to
+  ElasticSearch cluster and S3 bucket once every day
+
+  '
+Globals:
+  Function:
+    Timeout: 120
+    Tags:
+      auto-delete: false
+      project: personal
+Resources:
+  StackOverFlowApiFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: StackOverFlowApiFunction
+      Description: Read aws analytics service questions from stackoverflow and push
+        to ElasticSearch cluster
+      Handler: main.lambda_handler
+      Runtime: python3.7
+      MemorySize: 1024
+      Policies:
+      - Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Action:
+          - es:ESHttp*
+          Resource: arn:aws:es:us-east-1:649687724644:domain/new-domain/*
+        - Effect: Allow
+          Action:
+          - s3:PutObject
+          - s3:Get*
+          Resource:
+          - arn:aws:s3:::stackoverflow-questions-bucket
+          - arn:aws:s3:::stackoverflow-questions-bucket/*
+      Events:
+        DailyEvent:
+          Type: Schedule
+          Properties:
+            Schedule: rate(1 day)
+            Name: DailyScheduleForStackOverFlow
+            Description: Invoke lambda function daily once
+            Enabled: true
+Outputs:
+  LambdaFunctionIamRole:
+    Description: Implicit IAM Role created for lambda function
+    Value:
+      Fn::GetAtt:
+      - StackOverFlowApiFunctionRole
+      - Arn
