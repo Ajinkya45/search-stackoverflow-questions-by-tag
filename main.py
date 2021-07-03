@@ -91,7 +91,7 @@ def pushToS3(body, Tag):
     # S3 client
     client = boto3.client('s3')
     dt = date.today()
-    key = "test/year=" + str(dt.year) + "/month=" + str(dt.month) + "/day=" + str(dt.day) + "/" + Tag
+    key = "year=" + str(dt.year) + "/month=" + str(dt.month) + "/day=" + str(dt.day) + "/" + Tag
 
     s3Response = client.put_object(
         Body = body,
