@@ -27,3 +27,6 @@ six.py
 LICENSE
 History.md
 .aws-sam/
+addSingleTagS3.py
+samconfig.toml
+Y

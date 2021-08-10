@@ -51,6 +51,8 @@ def FormRequestBody(Tag, Questions):
             q["creation_date"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(q["creation_date"]))
             q["last_activity_date"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(q["last_activity_date"]))
             q["ingestion_date"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(math.floor(time.time())))
+            # adding seperate "tag" field to create viz in quicksight which do not support array
+            q['tag'] = Tag
             source = json.dumps(q)
 
             BulkRequestBody += "\n".join([json.dumps(action), source]) + "\n"

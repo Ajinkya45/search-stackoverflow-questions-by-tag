@@ -1,9 +1,7 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
 Description: 'Read aws analytics service questions from stackoverflow and push to
-  ElasticSearch cluster and S3 bucket once every day
-
-  '
+  ElasticSearch cluster and S3 bucket once every day'
 Globals:
   Function:
     Timeout: 120
