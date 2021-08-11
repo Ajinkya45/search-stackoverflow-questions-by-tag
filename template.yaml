@@ -1,4 +1,4 @@
-AWSTemplateFormatVersion: '2010-09-09'
+AWSTemplateFormatVersion: "2010-09-09"
 Transform: AWS::Serverless-2016-10-31
 Description: 'Read aws analytics service questions from stackoverflow and push to
   ElasticSearch cluster and S3 bucket once every day'
@@ -23,15 +23,16 @@ Resources:
         Statement:
         - Effect: Allow
           Action:
-          - es:ESHttp*
-          Resource: arn:aws:es:us-east-1:649687724644:domain/new-domain/*
-        - Effect: Allow
-          Action:
           - s3:PutObject
           - s3:Get*
           Resource:
           - arn:aws:s3:::stackoverflow-questions-bucket
           - arn:aws:s3:::stackoverflow-questions-bucket/*
+        - Effect: Allow
+          Action:
+          - lambda:InvokeFunction
+          Resource: 
+          - !GetAtt DestinationSearchFunction.Arn
       Events:
         DailyEvent:
           Type: Schedule
@@ -40,6 +41,21 @@ Resources:
             Name: DailyScheduleForStackOverFlow
             Description: Invoke lambda function daily once
             Enabled: true
+      EventInvokeConfig:
+        DestinationConfig:
+          OnSuccess:
+            Type: Lambda
+            Destination: !GetAtt DestinationSearchFunction.Arn
+    DependsOn: DestinationSearchFunction     
+  DestinationSearchFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: DestinationSearchFunction
+      Description: Perform search request against ES and forward result to chime webhook
+      Handler: search-query.lambda_handler
+      Runtime: python3.7
+      MemorySize: 1024
+      Role: arn:aws:iam::649687724644:role/es-fgac-stack-search-role
 Outputs:
   LambdaFunctionIamRole:
     Description: Implicit IAM Role created for lambda function
