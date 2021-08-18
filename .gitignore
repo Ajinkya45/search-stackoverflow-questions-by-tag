@@ -8,6 +8,8 @@ certifi/
 certifi-2021.5.30.dist-info/
 chardet/
 chardet-4.0.0.dist-info/
+elasticsearch/
+elasticsearch-7.9.0.dist-info/
 dateutil/
 idna/
 idna-2.10.dist-info/

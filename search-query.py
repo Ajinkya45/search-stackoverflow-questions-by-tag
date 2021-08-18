@@ -3,33 +3,30 @@ from requests_aws4auth import AWS4Auth
 import boto3
 import json
 import requests
+import GetParameters
+import os
 
-sts_client = client = boto3.client('sts')
-host = 'search-new-domain-hv5z4dbp4nkgacx32iwvixrudu.us-east-1.es.amazonaws.com'
-chime_webhook = 'https://hooks.chime.aws/incomingwebhooks/4fbfcf11-eed0-4b2c-8a93-3ed6fb391c88?token=TTJYdzY0YnB8MXxkR0hYTU1HWHVKRGNOa3ZMRGZsclRCTngzSDVNT0d3RWdmSTFLQ0RON0hF'
-query = {
-    "query": {
-        "range": {
-            "creation_date": {
-                "gte": "now-1d",
-                "lt": "now"
-            }
-        }
-    }
-}
-
+parameters = {}
 def lambda_handler(event, conext):
-
+    global parameters;
+    # read parameters from SSM
+    parameters_name = [
+        '/project-stackoverflow/es/host', 
+        '/project-stackoverflow/chime/webhook'
+    ]
+    parameters = GetParameters.get_parameters(parameters_name)
+    
     print(event)
-    credentials = boto3.Session().get_credentials()
+    Credentials = boto3.Session().get_credentials()
     awsauth = AWS4Auth(
-        credentials['AccessKeyId'], 
-        credentials['SecretAccessKey'],
+        Credentials.access_key, 
+        Credentials.secret_key,
         'us-east-1',
         'es',
-        session_token=credentials['SessionToken']
+        session_token=Credentials.token
     )
 
+    host = parameters['/project-stackoverflow/es/host'].split("//")[1]
     es = Elasticsearch(
         hosts=[{'host': host, 'port': 443}],
         http_auth=awsauth,
@@ -38,19 +35,25 @@ def lambda_handler(event, conext):
         connection_class=RequestsHttpConnection
     )
 
-    search_todays_result(es, query)
+    search_todays_result(es)
 
-def search_todays_result(es_client, query):
-    es_response = es_client.search(
-        body=query,
-        index='stackoverflow-index',
-        _source = "tag,title,link,is_answered,creation_date"
-    )
+def search_todays_result(es_client):
+    with open('search-query.json', 'r') as query_file:
+        query = json.load(query_file)
 
-    send_chime_notification(es_response)
-
+    try:
+        es_response = es_client.search(
+            body=query,
+            index=os.environ["index"],
+            _source = os.environ["source"]
+        )
+    except Exception as e:
+            print("Exception raised - ", e)
+    else:
+        send_chime_notification(es_response)
 
 def send_chime_notification(payload):
+    global parameters;
     hits = [hit['_source'] for hit in payload['hits']['hits']]
 
     if len(hits) > 0:
@@ -62,6 +65,7 @@ def send_chime_notification(payload):
             "Content": "no new questions"
         }
 
+    chime_webhook = parameters['/project-stackoverflow/chime/webhook']
     try:
         resp = requests.post(chime_webhook, json=msg, headers={'Content-Type': 'application/json'})
     except Exception as e:

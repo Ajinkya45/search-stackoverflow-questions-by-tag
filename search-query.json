@@ -1,0 +1,10 @@
+{
+    "query": {
+        "range": {
+            "creation_date": {
+                "gte": "now-1d",
+                "lt": "now"
+            }
+        }
+    }
+}

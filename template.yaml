@@ -17,7 +17,11 @@ Resources:
         to ElasticSearch cluster
       Handler: main.lambda_handler
       Runtime: python3.7
-      MemorySize: 1024
+      MemorySize: 128
+      Environment:
+        Variables:
+          tags : aws-elasticsearch,amazon-kinesis,amazon-kinesis-firehose,amazon-kinesis-analytics,amazon-elasticsearch,aws-msk
+          index : stackoverflow-index
       Policies:
       - Version: '2012-10-17'
         Statement:
@@ -33,6 +37,11 @@ Resources:
           - lambda:InvokeFunction
           Resource: 
           - !GetAtt DestinationSearchFunction.Arn
+        - Effect: Allow
+          Action:
+          - ssm:GetParameters
+          Resource:
+          - arn:aws:ssm:us-east-1:649687724644:parameter/project-stackoverflow*
       Events:
         DailyEvent:
           Type: Schedule
@@ -54,8 +63,19 @@ Resources:
       Description: Perform search request against ES and forward result to chime webhook
       Handler: search-query.lambda_handler
       Runtime: python3.7
-      MemorySize: 1024
-      Role: arn:aws:iam::649687724644:role/es-fgac-stack-search-role
+      MemorySize: 128
+      Environment:
+        Variables:
+          index : stackoverflow-index
+          source : tag,title,link,is_answered,creation_date
+      Policies:
+      - Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Action:
+          - ssm:GetParameters
+          Resource:
+          - arn:aws:ssm:us-east-1:649687724644:parameter/project-stackoverflow*
 Outputs:
   LambdaFunctionIamRole:
     Description: Implicit IAM Role created for lambda function

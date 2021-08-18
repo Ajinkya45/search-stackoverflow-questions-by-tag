@@ -1,3 +1,4 @@
+import os
 import time
 import math
 import requests
@@ -5,6 +6,7 @@ import json
 import boto3
 from requests_aws4auth import AWS4Auth
 from datetime import date
+import GetParameters
 
 def lambda_handler(event, conext):
 
@@ -14,7 +16,7 @@ def lambda_handler(event, conext):
     Order = "desc"
     Sort = "creation"
     Accepted = False
-    Tagged = ["aws-elasticsearch", "amazon-kinesis", "amazon-kinesis-firehose", "amazon-kinesis-analytics", "amazon-elasticsearch", "aws-msk"]
+    Tagged = os.environ['tags'].split(",")
     Site = "stackoverflow"
 
     # Base API url
@@ -40,6 +42,12 @@ def lambda_handler(event, conext):
 
 # a function to form bulk request body
 def FormRequestBody(Tag, Questions):
+    # read parameters from SSM
+    parameters_name = [
+        '/project-stackoverflow/es/host', 
+        '/project-stackoverflow/s3/bucket/name'
+    ]
+    parameters = GetParameters.get_parameters(parameters_name)
 
     if Questions["items"]:
 
@@ -58,23 +66,23 @@ def FormRequestBody(Tag, Questions):
             BulkRequestBody += "\n".join([json.dumps(action), source]) + "\n"
             S3body += source + "\n"
 
-        pushToES(BulkRequestBody)
-        pushToS3(S3body, Tag)
+        pushToES(BulkRequestBody, parameters)
+        pushToS3(S3body, Tag, parameters)
 
     else:
         print("no questions to push to elasticsearch for tag", Tag)
         print("-----------------------------------------------------------------------")
 
-def pushToES(body):
+def pushToES(body, params):
 
     # AWS elasticsearch request parameters
-    Host = 'https://search-new-domain-hv5z4dbp4nkgacx32iwvixrudu.us-east-1.es.amazonaws.com/'
+    Host = params['/project-stackoverflow/es/host']
     Region = 'us-east-1'
     Service = 'es'
     Credentials = boto3.Session().get_credentials()
     Awsauth = AWS4Auth(Credentials.access_key, Credentials.secret_key, Region, Service, session_token=Credentials.token)
 
-    Path = "stackoverflow-index/_bulk"
+    Path = "/" + os.environ["index"] + "/_bulk"
     EsUrl = Host + Path
 
     # Elasticsearch bulk request
@@ -88,7 +96,7 @@ def pushToES(body):
         print(EsResponse.json())
         print("-----------------------------------------------------------------------")
 
-def pushToS3(body, Tag):
+def pushToS3(body, Tag, params):
 
     # S3 client
     client = boto3.client('s3')
@@ -97,7 +105,7 @@ def pushToS3(body, Tag):
 
     s3Response = client.put_object(
         Body = body,
-        Bucket = 'stackoverflow-questions-bucket',
+        Bucket = params['/project-stackoverflow/s3/bucket/name'],
         Key = key
     )
 
