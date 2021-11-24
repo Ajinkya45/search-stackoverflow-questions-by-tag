@@ -1,4 +1,4 @@
-AWSTemplateFormatVersion: "2010-09-09"
+AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
 Description: 'Read aws analytics service questions from stackoverflow and push to
   ElasticSearch cluster and S3 bucket once every day'
@@ -55,7 +55,8 @@ Resources:
           OnSuccess:
             Type: Lambda
             Destination: !GetAtt DestinationSearchFunction.Arn
-    DependsOn: DestinationSearchFunction     
+    DependsOn: 
+    - DestinationSearchFunction     
   DestinationSearchFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -76,6 +77,13 @@ Resources:
           - ssm:GetParameters
           Resource:
           - arn:aws:ssm:us-east-1:649687724644:parameter/project-stackoverflow*
+      EventInvokeConfig:
+        DestinationConfig:
+          OnSuccess:
+            Type: Lambda
+            Destination: !GetAtt RedshiftLoadFunction.Arn
+    DependsOn: 
+    - RedshiftLoadFunction
   RedshiftLoadFunction:
     Type: AWS::Serverless::Function
     Properties:
