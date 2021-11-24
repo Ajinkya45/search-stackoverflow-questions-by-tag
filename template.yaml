@@ -66,7 +66,7 @@ Resources:
       MemorySize: 128
       Environment:
         Variables:
-          index : stackoverflow-index
+          bucket : stackoverflow-index
           source : tag,title,link,is_answered,creation_date
       Policies:
       - Version: '2012-10-17'
@@ -76,6 +76,40 @@ Resources:
           - ssm:GetParameters
           Resource:
           - arn:aws:ssm:us-east-1:649687724644:parameter/project-stackoverflow*
+  RedshiftLoadFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: RedshiftLoadFunction
+      Description: Load data to redshift from s3 bucket
+      Handler: redshift-load.lambda_handler
+      Runtime: python3.7
+      MemorySize: 128
+      Environment:
+        Variables:
+          index : stackoverflow-questions-bucket
+          clustername : redshift-test-cluster
+          rshost : redshift-test-cluster.ch6emrqxfmh2.us-east-1.redshift.amazonaws.com
+          db : dev
+          user : lambda_user
+          usergroup : stack_group
+      Policies:
+      - Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Action:
+          - redshift:GetClusterCredentials
+          - redshift:CreateClusterUser
+          - redshift:JoinGroup
+          Resource:
+          - arn:aws:redshift:us-east-1:649687724644:dbuser:redshift-test-cluster/lambda_user
+          - arn:aws:redshift:us-east-1:649687724644:dbname:redshift-test-cluster/dev
+          - arn:aws:redshift:us-east-1:649687724644:dbgroup:redshift-test-cluster/stack_group
+        - Effect: Allow
+          Action:
+          - s3:List*
+          Resource:
+          - arn:aws:s3:::stackoverflow-questions-bucket
+          - arn:aws:s3:::stackoverflow-questions-bucket/*
 Outputs:
   LambdaFunctionIamRole:
     Description: Implicit IAM Role created for lambda function
