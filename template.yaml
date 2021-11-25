@@ -92,6 +92,7 @@ Resources:
       Handler: redshift-load.lambda_handler
       Runtime: python3.7
       MemorySize: 128
+      Timeout: 600
       Environment:
         Variables:
           clustername : redshift-test-cluster
