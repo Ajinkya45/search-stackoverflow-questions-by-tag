@@ -101,6 +101,12 @@ Resources:
           user : lambda_user
           usergroup : stack_group
           bucket : stackoverflow-questions-bucket
+      VpcConfig:
+        SecurityGroupIds: 
+        - sg-0fb8197768c00aa91
+        SubnetIds:
+        - subnet-4cd32b01
+        - subnet-410a3f1d
       Policies:
       - Version: '2012-10-17'
         Statement:
