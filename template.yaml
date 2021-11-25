@@ -67,7 +67,7 @@ Resources:
       MemorySize: 128
       Environment:
         Variables:
-          bucket : stackoverflow-index
+          index : stackoverflow-index
           source : tag,title,link,is_answered,creation_date
       Policies:
       - Version: '2012-10-17'
@@ -94,12 +94,12 @@ Resources:
       MemorySize: 128
       Environment:
         Variables:
-          index : stackoverflow-questions-bucket
           clustername : redshift-test-cluster
           rshost : redshift-test-cluster.ch6emrqxfmh2.us-east-1.redshift.amazonaws.com
           db : dev
           user : lambda_user
           usergroup : stack_group
+          bucket : stackoverflow-questions-bucket
       Policies:
       - Version: '2012-10-17'
         Statement:
